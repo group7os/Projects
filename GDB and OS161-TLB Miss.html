@@ -1,0 +1,398 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+            "http://www.w3.org/TR/html4/loose.dtd">
+
+<!-- begin header.php -->
+<html>
+<head>
+
+<!-- begin config.php -->
+
+<!-- begin common.php -->
+<!-- end common.php -->
+
+<!-- end config.php -->
+
+<!-- begin metadata.php -->
+<base href="http://cgi.cse.unsw.edu.au/~cs3231/" target="_top">
+<link rel="stylesheet" type="text/css" href="/~cs3231/style.css">
+<link rel="shortcut icon" href="/~cs3231/favicon.ico">
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<meta name="Keywords" content="course University New South Wales UNSW Computer Science Engineering"> 
+<meta name="Author" content="Kevin Elphinstone & Cameron Stone">
+<meta name="resource-type" content="document">
+<meta name="language" content="en">
+<meta name="Description" content="COMP3231 Introductory level operating systems course (third year)">
+<meta name="resource-type" content="document">
+<meta name="language" content="en">
+<!-- end metadata.php -->
+
+<title>GDB and OS/161 : COMP3231/9201/3891/9283 Operating Systems 2015/S1</title>
+</head>
+<body>
+
+<!-- begin top.php -->
+<table width="100%">
+<tr>
+<td align="left"><a href="http://www.cse.unsw.edu.au">
+<img src="/~cs3231/images/cse.png" alt="[CSE]"></a>
+<a
+href="https://wiki.cse.unsw.edu.au/cs3231cgi/Tutors">
+.</a>
+</td>
+<td class="top">
+COMP3231/9201/3891/9283 Operating Systems 2015/S1</td>
+<td align="right">
+<a href="http://www.unsw.edu.au">
+<img src="/~cs3231/images/unsw.png" alt="[UNSW]">
+</a>
+</td>
+</tr>
+</table>
+<!-- end top.php -->
+<hr>
+<table width="100%" align="center">
+<tr><td>
+<h2 class="title">GDB and OS/161</h2>
+</td></tr><tr><td>
+<!-- end header.php -->
+
+This page contains a short tutorial on using GDB with OS161.
+
+<h3> Setting up GDB </h3>
+
+<p>Every time you start GDB you will need to tell it the location of your
+source and how to communicate with System/161.  This can become
+tedious, so we create a shortcut.  
+
+<p>Place the following (adjusted for your setup, of course) into your
+root directory, usually <tt>~/cs3231/root</tt> in a file called
+<tt>.gdbinit</tt>.
+
+<pre>
+set can-use-hw-watchpoints 0
+define asst0
+dir ~/cs3231/asst0-src/kern/compile/ASST0
+target remote unix:.sockets/gdb
+b panic
+end
+</pre>
+
+Whenever you start GDB in this directory, you can type <tt>asst0</tt>
+and the above commands will be run.  Note that we also set a
+breakpoint at the <tt>panic</tt> function &mdash; whenever the kernel
+panics the debugger will be entered.  Very useful.
+
+<h3> An Example </h3>
+
+Consider the following session based on a (hypothetical) buggy kernel.  We wish to
+find the bug, so we start sys161 with the <tt>-w</tt> flag, which
+tells sys161 to wait for GDB.  We get the following:
+
+<pre class="os161">
+~/cs3231/root$ sys161 -w kernel 
+sys161: System/161 release 1.1, compiled Jul 28 2003 17:28:51
+sys161: Waiting for debugger connection...
+</pre>
+
+In another terminal, we have changed the directory to the root directory and
+run GDB.  We run the <tt>asst0</tt> command to setup GDB, and then we
+    can let sys161 continue (the <tt>c</tt> command).
+
+<pre class="gdb">
+~/cs3231/root$ os161-gdb kernel 
+GNU gdb 4.18
+Copyright 1998 Free Software Foundation, Inc.
+GDB is free software, covered by the GNU General Public License, and you are
+welcome to change it and/or distribute copies of it under certain conditions.
+Type "show copying" to see the conditions.
+There is absolutely no warranty for GDB.  Type "show warranty" for details.
+This GDB was configured as "--host=i686-pc-linux-gnu --target=mips-elf"...
+(gdb) asst0
+__start () at ../../arch/mips/mips/start.S:24
+24      ../../arch/mips/mips/start.S: No such file or directory.
+Current language:  auto; currently asm
+Breakpoint 1 at 0x80010c94: file ../../lib/kprintf.c, line 94.
+(gdb) c
+Continuing.
+</pre>
+
+In the terminal running sys161 we see the following output:
+
+<pre class="os161">
+sys161: New debugger connection
+
+OS/161 base system version 1.08
+Copyright (c) 2000, 2001, 2002, 2003
+   President and Fellows of Harvard College.  All rights reserved.
+
+Put-your-group-name-here's system version 0 (ASST0 #3)
+
+Cpu is MIPS r2000/r3000
+344k physical memory available
+Device probe...
+lamebus0 (system main bus)
+emu0 at lamebus0
+ltrace0 at lamebus0
+ltimer0 at lamebus0
+hardclock on ltimer0 (100 hz)
+beep0 at ltimer0
+rtclock0 at ltimer0
+lrandom0 at lamebus0
+random0 at lrandom0
+lhd0 at lamebus0
+lhd1 at lamebus0
+lser0 at lamebus0
+con0 at lser0
+pseudorand0 (virtual)
+
+panic: Fatal exception 3 (TLB miss on store) in kernel mode
+panic: EPC 0x800197c4, exception vaddr 0x0
+</pre>
+
+The kernel has hit a bug and panicked!  The kernel tells us that it
+    has taken a <tt>TLB miss on store</tt> in kernel mode, which means
+    that some kernel code has written to an invalid address.  The
+    second line tells us that the address of the faulting instruction
+    is <tt>0x800197c4</tt> and the address the instruction was trying
+    to access is <tt>0x0</tt>.
+<p>
+Luckily, we set GDB to break whenever the <tt>panic</tt> function
+      was invoked, so in our GDB terminal we see the following:
+
+<pre class="gdb">
+Breakpoint 1, panic (fmt=0x80023270 "I can't handle this... I think I'll just die now...\n") at ../../lib/kprintf.c:94
+94              if (evil==0) {
+Current language:  auto; currently c
+</pre>
+
+At this point we would like to know where the exception occurred.
+    There are two ways of doing this: using the <tt>list</tt> command
+    or the <tt>frame</tt> command.
+<p>
+The <tt>list</tt> command is useful for finding the line of source
+      that contains the faulting instruction (note the <tt>*</tt>):
+
+<pre class="gdb">
+(gdb) list *0x800197c4
+0x800197c4 is in kmain (../../main/main.c:164).
+159     kmain(char *arguments)
+160     {
+161         char *bad_ptr = NULL;
+162         boot();
+163         
+164         *bad_ptr = 0;
+165
+166         menu(arguments);
+167
+168         /* Should not get here */
+</pre>
+
+In this case it is pretty easy to see what happened --- the
+<tt>bad_ptr</tt> variable was dereferenced without being
+initialised to a valid memory location.
+
+<p><b>Remember</b>: this is a fictional example; your assignment 0
+won't look the same.
+
+<p>If we wanted to examine the state of the program, we would use the
+<tt>where</tt> and <tt>frame</tt> commands:
+
+<pre class="gdb">
+(gdb) where
+#0  panic (fmt=0x80023270 "I can't handle this... I think I'll just die now...\n") at ../../lib/kprintf.c:94
+#1  0x8000cfbc in mips_trap (tf=0x80029f38) at ../../arch/mips/mips/trap.c:197
+#2  0x8000bbb0 in common_exception () at ../../arch/mips/mips/exception.S:211
+#3  0x800197c4 in kmain (arguments=0x80028af4 "") at ../../main/main.c:164
+#4  0x8000c7e8 in __start () at ../../arch/mips/mips/start.S:163
+</pre>
+
+We can see the functions that led to this exception: <tt>__start</tt>
+    called <tt>kmain</tt> which took an exception, causing
+    <tt>common_exception</tt> to be called and then so on down to
+    <tt>panic</tt>.  
+<p>
+We would like to know the line that caused the exception, and we would
+      also like to examine the program's variables.  To do this, we
+      use the <tt>frame</tt> command, telling it that we would like to
+      examine the frame associated with <tt>kmain</tt>, in this case
+      frame 3 (the number next to kmain in the above output).
+
+<pre class="gdb">
+(gdb) frame 3
+#3  0x800197c4 in kmain (arguments=0x80028af4 "") at ../../main/main.c:164
+164         *bad_ptr = 0;
+</pre>
+
+Looking at the above output, it seems that the store exception was
+    caused by the store to <tt>bad_ptr</tt>.  To make sure, we can get
+    the value of <tt>bad_ptr</tt> using the <tt>print</tt> command (we
+    can shorten this to <tt>p</tt>).
+
+<pre class="gdb">
+(gdb) p bad_ptr
+$1 = 0x0
+</pre>
+
+We have found the culprit!  The kernel has tried to store to the
+  memory pointed to by <tt>bad_ptr</tt>, however the location is
+  invalid (0x0).
+
+<h3> Watch Points </h3>
+
+Sometimes bugs are not as obvious as in the previous example.  We
+would like the ability to break into the debugger whenever a
+certain variable is modified.  In GDB this is done with the
+<tt>watch</tt> command.
+<p>
+We start as before, debugging a buggy kernel:
+
+<pre class="gdb">
+(gdb) asst0
+__start () at ../../arch/mips/mips/start.S:24
+24	../../arch/mips/mips/start.S: No such file or directory.
+Current language:  auto; currently asm
+Warning: /import/paulaner/2/sjw/work/cs3231_03s2/source/os161-1.08/kern/compile/ASST0: No such file or directory.
+Breakpoint 1 at 0x80010c94: file ../../lib/kprintf.c, line 94.
+(gdb) c
+Continuing.
+
+Breakpoint 1, panic (fmt=0x800232c0 "I can't handle this... I think I'll just die now...\n") at ../../lib/kprintf.c:94
+94		if (evil==0) {
+Current language:  auto; currently c
+(gdb) where
+#0  panic (fmt=0x800232c0 "I can't handle this... I think I'll just die now...\n") at ../../lib/kprintf.c:94
+#1  0x8000cfbc in mips_trap (tf=0x80029f40) at ../../arch/mips/mips/trap.c:197
+#2  0x8000bbb0 in common_exception () at ../../arch/mips/mips/exception.S:211
+#3  0x80019808 in kmain (arguments=0x80028b58 "") at ../../main/main.c:173
+#4  0x8000c7e8 in __start () at ../../arch/mips/mips/start.S:163
+(gdb) frame 3
+#3  0x80019808 in kmain (arguments=0x80028b58 "") at ../../main/main.c:173
+173		*good_ptr = 1;
+(gdb) p good_ptr
+$1 = (int *) 0x0
+</pre>
+
+So far, so good.  However, the cause of the bug isn't apparent.  From
+    looking at the code it seems that something is changing <tt>good_ptr</tt>
+    between lines 171 and 173.
+
+<pre class="gdb">
+(gdb) list *0x80019808
+0x80019808 is in kmain (../../main/main.c:173).
+168	{
+169		boot();
+170	
+171		good_ptr = &some_int;
+172		do_something();
+173		*good_ptr = 1;
+174	
+175		menu(arguments);
+176	
+177		/* Should not get here */
+</pre>
+
+We will use watchpoints to tell us when <tt>good_ptr</tt> changes.
+    Unfortunately, watchpoints in system 161 can be very slow, so we
+    would like to make sure that we only use watch points when we know
+    something is going to break.
+<p>
+We start as before, but this time break at <tt>kmain</tt>, both to
+check the value of <tt>good_ptr</tt> and to set the watchpoint.
+Note the use of the <b><tt>n</tt></b>ext command to step over the
+uninteresting <tt>boot()</tt> function.
+
+<pre class="gdb">
+(gdb) break kmain
+Breakpoint 5 at 0x800197d8: file ../../main/main.c, line 169.
+(gdb) c
+Continuing.
+
+Breakpoint 5, kmain (arguments=0x80028b58 "") at ../../main/main.c:169
+169		boot();
+Current language:  auto; currently c
+(gdb) n
+171		good_ptr = &amp;some_int;
+(gdb) p good_ptr
+$2 = (int *) 0x0
+(gdb) s
+172		do_something();
+(gdb) p good_ptr
+$3 = (int *) 0x80026c10
+(gdb) p &some_int
+$4 = (int *) 0x80026c10
+</pre>
+
+At this point, <tt>good_ptr</tt> is as you would expect --- it points
+    to <tt>some_int</tt>.  We now know that something changes
+    <tt>good_ptr</tt> in <tt>do_something()</tt>, so we set a
+    watchpoint and continue.
+
+
+<pre class="gdb">
+(gdb) watch good_ptr
+Watchpoint 6: good_ptr
+(gdb) c
+Continuing.
+Watchpoint 6: good_ptr
+
+Old value = (int *) 0x80026c10
+New value = (int *) 0x0
+do_something () at ../../main/main.c:160
+160	}
+</pre>
+
+Sure enough, the watchpoint has been tripped: the
+    <tt>do_something()</tt> function has changed the value of
+    <tt>good_ptr</tt> to <tt>NULL</tt>.
+
+<pre class="gdb">
+(gdb) list
+155	
+156	
+157	static void do_something(void)
+158	{
+159		good_ptr = NULL;
+160	}
+161	
+162	/*
+163	 * Kernel main. Boot up, then fork the menu thread; wait for a reboot
+164	 * request, and then shut down.
+</pre>
+
+<h3> Other Commands </h3>
+
+Apart from the above commands, the following commands
+    are useful:
+
+<ul>
+
+<li> <tt>step</tt> tells GDB to execute one line of the program.  If
+	the line is a function call, the function is stepped into.</li>
+
+<li> <tt>next</tt> is similar to <tt>step</tt>, however functions are
+	not followed --- the program runs until the control returns to
+	the current function. </li>
+
+<li> <tt>display</tt> causes an expression (usually a variable) to be
+	displayed every time you step --- useful for determining when
+	a variable changes.</li>
+
+<li> ... see the GDB documentation for many more useful commands.</li>
+</ul>
+
+<p> For those who prefer to use a GUI, try out ddd. However we provide
+no support for it. 
+<pre>
+% ddd -debugger os161-gdb kernel
+</pre>
+
+
+<!-- begin footer.php -->
+</td></tr><tr><td>
+<hr>
+<p class="modified">Page last modified: 8:39pm on Wednesday, 12th of March, 2014</p><p><a href="/~cs3231/doc/gdb_tut.php">Screen Version</a></p>
+</td></tr></table>
+<p>CRICOS Provider Number: 00098G</p>
+</body>
+</html>
+<!-- end footer.php -->
