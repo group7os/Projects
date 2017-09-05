@@ -1,0 +1,64 @@
+head     1.1;
+branch   1.1.1;
+access   ;
+symbols  os161-1_10:1.1.1.1 os161:1.1.1;
+locks    ; strict;
+comment  @ * @;
+
+
+1.1
+date     2017.09.05.14.38.11;  author root;  state Exp;
+branches 1.1.1.1;
+next     ;
+
+1.1.1.1
+date     2017.09.05.14.38.11;  author root;  state Exp;
+branches ;
+next     ;
+
+
+desc
+@@
+
+
+
+1.1
+log
+@Initial revision
+@
+text
+@#include <stdio.h>
+#include <unistd.h>
+#include <string.h>
+#include <err.h>
+#include <limits.h>
+
+/*
+ * pwd - print working directory.
+ * Usage: pwd
+ *
+ * Just uses the getcwd library call (which in turn uses the __getcwd
+ * system call.)
+ */
+
+int
+main()
+{
+	char buf[PATH_MAX+1], *p;
+
+	p = getcwd(buf, sizeof(buf));
+	if (p == NULL) {
+		err(1, ".");
+	}
+	printf("%s\n", buf);
+	return 0;
+}
+@
+
+
+1.1.1.1
+log
+@import of OS161
+@
+text
+@@

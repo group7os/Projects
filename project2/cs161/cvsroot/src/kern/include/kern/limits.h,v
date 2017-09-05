@@ -1,0 +1,49 @@
+head     1.1;
+branch   1.1.1;
+access   ;
+symbols  os161-1_10:1.1.1.1 os161:1.1.1;
+locks    ; strict;
+comment  @ * @;
+
+
+1.1
+date     2017.09.05.14.38.11;  author root;  state Exp;
+branches 1.1.1.1;
+next     ;
+
+1.1.1.1
+date     2017.09.05.14.38.11;  author root;  state Exp;
+branches ;
+next     ;
+
+
+desc
+@@
+
+
+
+1.1
+log
+@Initial revision
+@
+text
+@#ifndef _KERN_LIMITS_H_
+#define _KERN_LIMITS_H_
+
+/* Longest filename (without directory) not including null terminator */
+#define NAME_MAX  255
+
+/* Longest full path name */
+#define PATH_MAX   1024
+
+
+#endif /* _KERN_LIMITS_H_ */
+@
+
+
+1.1.1.1
+log
+@import of OS161
+@
+text
+@@

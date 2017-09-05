@@ -1,0 +1,62 @@
+head     1.1;
+branch   1.1.1;
+access   ;
+symbols  os161-1_10:1.1.1.1 os161:1.1.1;
+locks    ; strict;
+comment  @ * @;
+
+
+1.1
+date     2017.09.05.14.38.11;  author root;  state Exp;
+branches 1.1.1.1;
+next     ;
+
+1.1.1.1
+date     2017.09.05.14.38.11;  author root;  state Exp;
+branches ;
+next     ;
+
+
+desc
+@@
+
+
+
+1.1
+log
+@Initial revision
+@
+text
+@#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
+#include <err.h>
+
+/*
+ * mkdir - create a directory.
+ * Usage: mkdir DIRECTORY
+ *
+ * Just calls the mkdir() system call.
+ */
+
+int
+main(int argc, char *argv[])
+{
+	if (argc!=2) {
+		errx(1, "Usage: mkdir DIRECTORY");
+	}
+
+	if (mkdir(argv[1], 0775)) {
+		err(1, "%s", argv[1]);
+	}
+	return 0;
+}
+@
+
+
+1.1.1.1
+log
+@import of OS161
+@
+text
+@@

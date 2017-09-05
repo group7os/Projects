@@ -1,0 +1,51 @@
+head     1.1;
+branch   1.1.1;
+access   ;
+symbols  os161-1_10:1.1.1.1 os161:1.1.1;
+locks    ; strict;
+comment  @ * @;
+
+
+1.1
+date     2017.09.05.14.38.11;  author root;  state Exp;
+branches 1.1.1.1;
+next     ;
+
+1.1.1.1
+date     2017.09.05.14.38.11;  author root;  state Exp;
+branches ;
+next     ;
+
+
+desc
+@@
+
+
+
+1.1
+log
+@Initial revision
+@
+text
+@#include <unistd.h>
+#include <stdlib.h>
+
+/*
+ * true - succeed.
+ */
+
+int
+main()
+{
+	/* Just exit with success. */
+	exit(0);
+}
+@
+
+
+1.1.1.1
+log
+@import of OS161
+@
+text
+@@

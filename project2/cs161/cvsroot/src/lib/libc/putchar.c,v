@@ -1,0 +1,59 @@
+head     1.1;
+branch   1.1.1;
+access   ;
+symbols  os161-1_10:1.1.1.1 os161:1.1.1;
+locks    ; strict;
+comment  @ * @;
+
+
+1.1
+date     2017.09.05.14.38.12;  author root;  state Exp;
+branches 1.1.1.1;
+next     ;
+
+1.1.1.1
+date     2017.09.05.14.38.12;  author root;  state Exp;
+branches ;
+next     ;
+
+
+desc
+@@
+
+
+
+1.1
+log
+@Initial revision
+@
+text
+@#include <stdio.h>
+#include <unistd.h>
+
+/*
+ * C standard function - print a single character.
+ *
+ * Properly, stdio is supposed to be buffered, but for present purposes
+ * writing that code is not really worthwhile.
+ */
+
+int
+putchar(int ch)
+{
+	char c = ch;
+	int len;
+	len = write(STDOUT_FILENO, &c, 1);
+	if (len<=0) {
+		return EOF;
+	}
+	return ch;
+}
+@
+
+
+1.1.1.1
+log
+@import of OS161
+@
+text
+@@

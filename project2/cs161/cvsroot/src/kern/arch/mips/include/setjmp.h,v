@@ -1,0 +1,51 @@
+head     1.1;
+branch   1.1.1;
+access   ;
+symbols  os161-1_10:1.1.1.1 os161:1.1.1;
+locks    ; strict;
+comment  @ * @;
+
+
+1.1
+date     2017.09.05.14.38.11;  author root;  state Exp;
+branches 1.1.1.1;
+next     ;
+
+1.1.1.1
+date     2017.09.05.14.38.11;  author root;  state Exp;
+branches ;
+next     ;
+
+
+desc
+@@
+
+
+
+1.1
+log
+@Initial revision
+@
+text
+@#ifndef _MIPS_SETJMP_H_
+#define _MIPS_SETJMP_H_
+
+/*
+ * Must save: s0-s8, sp, ra (11 registers)
+ * Don't change __JB_REGS without adjusting mips_setjmp.S accordingly.
+ */
+#define __JB_REGS  11
+
+/* A jmp_buf is an array of __JB_REGS registers */
+typedef u_int32_t jmp_buf[__JB_REGS];
+
+#endif /* _MIPS_SETJMP_H_ */
+@
+
+
+1.1.1.1
+log
+@import of OS161
+@
+text
+@@
